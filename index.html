@@ -1,0 +1,298 @@
+<html lang="en-us"><script src="https://pygame-web.github.io/cdn/0.9.3/pythons.js" type=module id="site" data-python="python3.12" data-LINES=42 data-COLUMNS=132 data-os="vtx,snd,gui" async defer>#<!--
+
+print("""
+Loading jt from jt.apk
+    Pygbag Version : 0.9.3
+    Template Version : 0.9.3
+    Python  : 3.12
+    CDN URL : https://pygame-web.github.io/cdn/0.9.3/
+    Screen  : 1280x720
+    Title   : jt
+    Folder  : jt
+    Authors : pgw
+    SPDX-License-Identifier: cookiecutter.spdx
+
+""")
+
+import sys
+import asyncio
+import platform
+import json
+from pathlib import Path
+
+# do not rename
+async def custom_site():
+    import embed
+    platform.document.body.style.background = "#7f7f7f"
+
+    platform.window.transfer.hidden = true
+    platform.window.canvas.style.visibility = "visible"
+
+
+    bundle = "jt"
+
+    # the C or js loader could do that but be explicit.
+    appdir = Path(f"/data/data/{bundle}") # /data/data/jt
+    appdir.mkdir()
+
+
+    # unpack filesystem from compressed archive into work dir
+    if platform.window.location.host.find('.itch.zone')>0:
+        import zipfile
+        async with platform.fopen("jt.apk", "rb") as archive:
+            with zipfile.ZipFile(archive) as zip_ref:
+                zip_ref.extractall(appdir.as_posix())
+    else:
+        import tarfile
+        async with platform.fopen("jt.tar.gz", "rb") as archive:
+            tar = tarfile.open(fileobj=archive, mode="r:gz")
+            tar.extractall(path=appdir.as_posix(), filter='tar')
+            tar.close()
+
+    # preloader will change to work dir and prepend it to sys.path
+    platform.run_main(PyConfig, loaderhome= appdir / "assets", loadermain=None)
+
+
+    # wait preloading complete : that includes images and wasm compilation of bundled modules
+    while embed.counter()<0:
+        await asyncio.sleep(.1)
+
+    main = appdir / "assets" / "main.py"
+
+    # TODO: test for window.webkitAudioContext and block aio loop until gesture if accessing media manager play
+    # before a gesture is recorded ( touch or click )
+
+    # test/wait user media interaction
+    if not platform.window.MM.UME:
+
+        # now that apk is mounted we have access to font cache
+        # but we need to fill __file__ that is not yet set
+        __import__(__name__).__file__ = main
+
+        # now make a prompt
+        msg  = "Ready to start ! Please click/touch page"
+        platform.window.infobox.innerText = msg
+        print("\n"*4, f"    * Waiting for media user engagement. {msg} *" , "\n"*4)
+
+        while not platform.window.MM.UME:
+            await asyncio.sleep(.1)
+
+    # start async top level machinery if not started and add a console in any case if requested.
+    await TopLevel_async_handler.start_toplevel(platform.shell, console=window.python.config.debug)
+
+    # now that apk is mounted we have access to font cache
+    # but we need to fill __file__/__name__ that are not yet set
+    __import__(__name__).__file__ = main
+
+
+    def ui_callback(pkg):
+        platform.window.infobox.innerText = f"installing {pkg}"
+
+    await shell.source(main, callback=ui_callback)
+
+    # if you don't reach that step
+    # your main.py has an infinite sync loop somewhere !
+
+    platform.window.infobox.style.display = "none"
+    platform.window.config.gui_divider = 1
+    platform.window.window_resize()
+    print("default.tmpl: done")
+
+    shell.interactive()
+
+asyncio.run( custom_site() )
+
+
+
+
+
+
+
+
+
+
+
+
+# BEGIN BLOCK
+#
+# now this is the html part you can (and should) customize
+# It is not mandatory : pygame-script when it reads the first line (also called
+# shebang ) of above code create absolute minimal widget set
+# required for running with default rules
+#
+# do not alter that comment block it is separating python code from html code
+# =============================================================================
+# --></script><head><!--
+--><script type="application/javascript">
+
+config = {
+    xtermjs : "1",
+    _sdl2 : "canvas",
+    user_canvas : 0,
+    user_canvas_managed : 0,
+    gui_divider : 1,
+    ume_block : 1,
+    can_close : 0,
+    archive : "jt",
+    gui_debug : 0,
+    cdn : "https://pygame-web.github.io/cdn/0.9.3/",
+    autorun : 0,
+    PYBUILD : "3.12",
+    fb_ar   : 1.667,
+    fb_width : "800",
+    fb_height : "480"
+}
+
+function show_infobox() {
+    var ib = document.getElementById('infobox');
+    if (!ib) return;
+    ib.style.display = "block";
+    ib.style.left = ((window.innerWidth - ib.offsetWidth) / 2) + "px";
+    ib.style.top = ((window.innerHeight - ib.offsetHeight) / 2) + "px";
+}
+
+</script>
+
+    <title>Super JT World</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="icon" type="image/png" href="favicon.png" sizes="16x16">
+
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+
+        html, body {
+            width:100%; height:100%;
+            background:#000;
+            overflow:hidden;
+            touch-action:none;
+            -webkit-user-select:none;
+            user-select:none;
+            font-family:arial,sans-serif;
+        }
+
+        #gamecontainer {
+            position:absolute; top:0; left:0; width:100%; height:100%;
+            display:flex; align-items:center; justify-content:center;
+        }
+
+        canvas.emscripten {
+            border:0; padding:0;
+            image-rendering:pixelated;
+            image-rendering:crisp-edges;
+            touch-action:none;
+            z-index:5;
+        }
+
+        #canvas3d { display:none !important; }
+
+        #transfer {
+            position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+            text-align:center; color:#aaa; z-index:100;
+        }
+
+        #infobox {
+            position:fixed; z-index:999;
+            background:#222; color:#fff;
+            font-weight:bold; font-size:18px;
+            padding:16px 32px; border-radius:10px;
+            text-align:center;
+        }
+
+        #fullscreen_btn {
+            position:fixed; bottom:8px; right:8px; z-index:99999;
+            background:rgba(255,255,255,0.15); color:#fff;
+            border:2px solid rgba(255,255,255,0.3);
+            border-radius:8px; padding:10px 18px;
+            font-size:14px; font-weight:bold;
+            cursor:pointer; touch-action:manipulation;
+            backdrop-filter:blur(4px);
+        }
+        #fullscreen_btn:active { background:rgba(255,255,255,0.3); }
+
+        #pyconsole, #system, #box, #html, #dlg, #crt { display:none !important; }
+        #progress { width:200px; height:8px; }
+    </style>
+
+    <script src="https://pygame-web.github.io/cdn/0.9.3//browserfs.min.js"></script>
+
+</head>
+
+<body>
+
+    <div id="transfer">
+        <div id="status">Loading Super JT World...</div>
+        <div><progress value="0" max="100" id="progress"></progress></div>
+    </div>
+
+    <div id="gamecontainer">
+        <canvas class="emscripten" id="canvas"
+            width="1px" height="1px"
+            oncontextmenu="event.preventDefault()" tabindex=1>
+        </canvas>
+    </div>
+
+    <canvas class="emscripten" id="canvas3d" width="1px" height="1px" hidden></canvas>
+
+    <div id="infobox">Loading, please wait ...</div>
+
+    <button id="fullscreen_btn" onclick="goFullscreen()">FULLSCREEN</button>
+
+    <!-- Hidden required elements for pygbag -->
+    <div id="html" hidden></div>
+    <div id="crt" hidden><div id="system" hidden></div><div id="box" hidden><div id="info"></div><iframe id="iframe" hidden></iframe></div></div>
+    <div id="dlg" hidden><input type="file" id="dlg_multifile" multiple></div>
+    <div id="pyconsole" hidden><div id="terminal" hidden></div></div>
+
+    <script type="application/javascript">
+
+    const GAME_W = 800, GAME_H = 480;
+
+    function fitCanvas() {
+        const c = document.getElementById('canvas');
+        if (!c || c.width < 2) return;
+        const vw = window.innerWidth, vh = window.innerHeight;
+        const scale = Math.min(vw / GAME_W, vh / GAME_H);
+        c.style.width = Math.floor(GAME_W * scale) + 'px';
+        c.style.height = Math.floor(GAME_H * scale) + 'px';
+    }
+
+    // Debounced resize
+    let _rt = null;
+    window.addEventListener('resize', () => { clearTimeout(_rt); _rt = setTimeout(fitCanvas, 80); });
+
+    // Keep fitting until canvas is ready
+    let _fi = setInterval(() => {
+        const c = document.getElementById('canvas');
+        if (c && c.width > 2) { fitCanvas(); clearInterval(_fi); }
+    }, 200);
+
+    // Also fit after full load
+    window.addEventListener('load', () => setTimeout(fitCanvas, 600));
+
+    globalThis.__canvas_resized = () => { setTimeout(fitCanvas, 50); };
+
+    function goFullscreen() {
+        const el = document.documentElement;
+        (el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen).call(el);
+        try { screen.orientation.lock('landscape').catch(()=>{}); } catch(e) {}
+        setTimeout(fitCanvas, 300);
+        setTimeout(fitCanvas, 600);
+    }
+
+    async function custom_onload(debug_hidden) {
+        document.getElementById('pyconsole').hidden = true;
+        document.getElementById('transfer').hidden = debug_hidden;
+        show_infobox();
+    }
+
+    function custom_prerun() {}
+    function custom_postrun() {}
+
+    </script>
+
+</body>
+</html>
