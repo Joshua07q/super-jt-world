@@ -124,7 +124,6 @@ asyncio.run( custom_site() )
 # =============================================================================
 # --></script><head><!--
 --><script type="application/javascript">
-
 config = {
     xtermjs : "1",
     _sdl2 : "canvas",
@@ -142,7 +141,6 @@ config = {
     fb_width : "800",
     fb_height : "480"
 }
-
 function show_infobox() {
     var ib = document.getElementById('infobox');
     if (!ib) return;
@@ -150,9 +148,7 @@ function show_infobox() {
     ib.style.left = ((window.innerWidth - ib.offsetWidth) / 2) + "px";
     ib.style.top = ((window.innerHeight - ib.offsetHeight) / 2) + "px";
 }
-
 </script>
-
     <title>Super JT World</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -160,129 +156,42 @@ function show_infobox() {
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="icon" type="image/png" href="favicon.png" sizes="16x16">
-
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
-        html, body {
-            width:100%; height:100%;
-            background:#000;
-            overflow:hidden;
-            touch-action:none;
-            -webkit-user-select:none;
-            user-select:none;
-            font-family:arial,sans-serif;
-        }
-        #gamecontainer {
-            position:absolute; top:0; left:0; width:100%; height:100%;
-            display:flex; align-items:center; justify-content:center;
-        }
-        canvas.emscripten {
-            border:0; padding:0;
-            image-rendering:pixelated;
-            image-rendering:crisp-edges;
-            touch-action:none;
-            z-index:5;
-        }
+        html, body { width:100%; height:100%; background:#000; overflow:hidden; touch-action:none; -webkit-user-select:none; user-select:none; font-family:arial,sans-serif; }
+        #gamecontainer { position:absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+        canvas.emscripten { border:0; padding:0; image-rendering:pixelated; image-rendering:crisp-edges; touch-action:none; z-index:5; }
         #canvas3d { display:none !important; }
-        #transfer {
-            position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
-            text-align:center; color:#aaa; z-index:100;
-        }
-        #infobox {
-            position:fixed; z-index:999;
-            background:#222; color:#fff;
-            font-weight:bold; font-size:18px;
-            padding:16px 32px; border-radius:10px;
-            text-align:center;
-        }
-        #fullscreen_btn {
-            position:fixed; bottom:8px; right:8px; z-index:99999;
-            background:rgba(255,255,255,0.15); color:#fff;
-            border:2px solid rgba(255,255,255,0.3);
-            border-radius:8px; padding:10px 18px;
-            font-size:14px; font-weight:bold;
-            cursor:pointer; touch-action:manipulation;
-            backdrop-filter:blur(4px);
-        }
+        #transfer { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; color:#aaa; z-index:100; }
+        #infobox { position:fixed; z-index:999; background:#222; color:#fff; font-weight:bold; font-size:18px; padding:16px 32px; border-radius:10px; text-align:center; }
+        #fullscreen_btn { position:fixed; bottom:8px; right:8px; z-index:99999; background:rgba(255,255,255,0.15); color:#fff; border:2px solid rgba(255,255,255,0.3); border-radius:8px; padding:10px 18px; font-size:14px; font-weight:bold; cursor:pointer; touch-action:manipulation; backdrop-filter:blur(4px); }
         #fullscreen_btn:active { background:rgba(255,255,255,0.3); }
         #pyconsole, #system, #box, #html, #dlg, #crt { display:none !important; }
         #progress { width:200px; height:8px; }
     </style>
-
     <script src="https://pygame-web.github.io/cdn/0.9.3//browserfs.min.js"></script>
-
 </head>
-
 <body>
-
-    <div id="transfer">
-        <div id="status">Loading Super JT World...</div>
-        <div><progress value="0" max="100" id="progress"></progress></div>
-    </div>
-
-    <div id="gamecontainer">
-        <canvas class="emscripten" id="canvas"
-            width="1px" height="1px"
-            oncontextmenu="event.preventDefault()" tabindex=1>
-        </canvas>
-    </div>
-
+    <div id="transfer"><div id="status">Loading Super JT World...</div><div><progress value="0" max="100" id="progress"></progress></div></div>
+    <div id="gamecontainer"><canvas class="emscripten" id="canvas" width="1px" height="1px" oncontextmenu="event.preventDefault()" tabindex=1></canvas></div>
     <canvas class="emscripten" id="canvas3d" width="1px" height="1px" hidden></canvas>
-
     <div id="infobox">Loading, please wait ...</div>
-
     <button id="fullscreen_btn" onclick="goFullscreen()">FULLSCREEN</button>
-
     <div id="html" hidden></div>
     <div id="crt" hidden><div id="system" hidden></div><div id="box" hidden><div id="info"></div><iframe id="iframe" hidden></iframe></div></div>
     <div id="dlg" hidden><input type="file" id="dlg_multifile" multiple></div>
     <div id="pyconsole" hidden><div id="terminal" hidden></div></div>
-
     <script type="application/javascript">
-
     var GAME_W = 800, GAME_H = 480;
-
-    function fitCanvas() {
-        var c = document.getElementById('canvas');
-        if (!c || c.width < 2) return;
-        var vw = window.innerWidth, vh = window.innerHeight;
-        var scale = Math.min(vw / GAME_W, vh / GAME_H);
-        c.style.width = Math.floor(GAME_W * scale) + 'px';
-        c.style.height = Math.floor(GAME_H * scale) + 'px';
-    }
-
-    var _rt = null;
-    window.addEventListener('resize', function() { clearTimeout(_rt); _rt = setTimeout(fitCanvas, 80); });
-
-    var _fi = setInterval(function() {
-        var c = document.getElementById('canvas');
-        if (c && c.width > 2) { fitCanvas(); clearInterval(_fi); }
-    }, 200);
-
+    function fitCanvas() { var c = document.getElementById('canvas'); if (!c || c.width < 2) return; var vw = window.innerWidth, vh = window.innerHeight; var scale = Math.min(vw / GAME_W, vh / GAME_H); c.style.width = Math.floor(GAME_W * scale) + 'px'; c.style.height = Math.floor(GAME_H * scale) + 'px'; }
+    var _rt = null; window.addEventListener('resize', function() { clearTimeout(_rt); _rt = setTimeout(fitCanvas, 80); });
+    var _fi = setInterval(function() { var c = document.getElementById('canvas'); if (c && c.width > 2) { fitCanvas(); clearInterval(_fi); } }, 200);
     window.addEventListener('load', function() { setTimeout(fitCanvas, 600); });
-
     globalThis.__canvas_resized = function() { setTimeout(fitCanvas, 50); };
-
-    function goFullscreen() {
-        var el = document.documentElement;
-        if (el.requestFullscreen) { el.requestFullscreen(); }
-        else if (el.webkitRequestFullscreen) { el.webkitRequestFullscreen(); }
-        else if (el.msRequestFullscreen) { el.msRequestFullscreen(); }
-        try { screen.orientation.lock('landscape').catch(function(){}); } catch(e) {}
-        setTimeout(fitCanvas, 300);
-        setTimeout(fitCanvas, 600);
-    }
-
-    async function custom_onload(debug_hidden) {
-        document.getElementById('pyconsole').hidden = true;
-        document.getElementById('transfer').hidden = debug_hidden;
-        show_infobox();
-    }
-
+    function goFullscreen() { var el = document.documentElement; if (el.requestFullscreen) { el.requestFullscreen(); } else if (el.webkitRequestFullscreen) { el.webkitRequestFullscreen(); } else if (el.msRequestFullscreen) { el.msRequestFullscreen(); } try { screen.orientation.lock('landscape').catch(function(){}); } catch(e) {} setTimeout(fitCanvas, 300); setTimeout(fitCanvas, 600); }
+    async function custom_onload(debug_hidden) { document.getElementById('pyconsole').hidden = true; document.getElementById('transfer').hidden = debug_hidden; show_infobox(); }
     function custom_prerun() {}
     function custom_postrun() {}
-
     </script>
-
 </body>
 </html>
